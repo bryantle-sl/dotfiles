@@ -45,3 +45,7 @@ vim.o.matchpairs = vim.o.matchpairs .. ",<:>"
 
 -- Highlight matching parenthesis with specific colors
 vim.cmd('highlight MatchParen ctermbg=black ctermfg=white')
+
+-- make control e and control y faster
+vim.keymap.set('n', '<C-e>', '5<C-e>', { noremap = true, silent = true })
+vim.keymap.set('n', '<C-y>', '5<C-y>', { noremap = true, silent = true })
