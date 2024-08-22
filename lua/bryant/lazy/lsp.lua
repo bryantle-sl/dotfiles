@@ -8,10 +8,10 @@ return {
         "hrsh7th/cmp-path",
         "hrsh7th/cmp-cmdline",
         "hrsh7th/nvim-cmp",
-        "L3MON4D3/LuaSnip",
-        "saadparwaiz1/cmp_luasnip",
         "j-hui/fidget.nvim",
         "nvimtools/none-ls.nvim",
+        "kosayoda/nvim-lightbulb",
+        "stevearc/aerial.nvim",
     },
     config = function()
         local cmp = require('cmp')
@@ -27,7 +27,6 @@ return {
         require("mason-lspconfig").setup({
             ensure_installed = {
                 "lua_ls",
-                "rust_analyzer",
                 "gopls",
                 "pyright",
                 "marksman",
@@ -39,6 +38,7 @@ return {
                     }
                 end,
                 ["pyright"] = function()
+                    local home = vim.fn.expand("$HOME")
                     require("lspconfig").pyright.setup {
                         capabilities = capabilities,
                         settings = {
@@ -48,9 +48,15 @@ return {
                                     useLibraryCodeForTypes = true,
                                     diagnosticMode = "workspace",
                                     typeCheckingMode = "basic",
+                                    autoImportCompletions = true,
+                                    extraPaths = { ".", "analytics", home .. "/anaconda3/envs/analytics/lib/python3.11/site-packages",
+                                    },
                                 },
                             },
                         },
+                        root_dir = function(fname)
+                            return require("lspconfig.util").find_git_ancestor(fname) or vim.loop.os_homedir()
+                        end,
                     }
                 end,
                 ["gopls"] = function()
@@ -62,6 +68,9 @@ return {
                                     unusedparams = true,
                                 },
                                 staticcheck = true,
+                                gofumpt = true,
+                                usePlaceholders = true,
+                                experimentalPostfixCompletions = true,
                             },
                         },
                     }
@@ -74,7 +83,11 @@ return {
                                 runtime = { version = "LuaJIT" },
                                 diagnostics = {
                                     globals = { "vim", "it", "describe", "before_each", "after_each" },
-                                }
+                                },
+                                workspace = {
+                                    library = vim.api.nvim_get_runtime_file("", true),
+                                    checkThirdParty = false,
+                                },
                             }
                         }
                     }
@@ -87,17 +100,19 @@ return {
             sources = {
                 null_ls.builtins.formatting.black,
                 null_ls.builtins.formatting.prettier.with({
-                    filetypes = { "markdown", "md" }
+                    filetypes = { "markdown", "yaml", "json" }
                 }),
+                null_ls.builtins.formatting.goimports,
             },
         })
 
+        require("nvim-lightbulb").setup({
+            autocmd = { enabled = true }
+        })
+
+        require('aerial').setup()
+
         cmp.setup({
-            snippet = {
-                expand = function(args)
-                    require('luasnip').lsp_expand(args.body)
-                end,
-            },
             mapping = cmp.mapping.preset.insert({
                 ['<S-Tab>'] = cmp.mapping.select_prev_item(),
                 ['<Tab>'] = cmp.mapping.select_next_item(),
@@ -106,10 +121,13 @@ return {
             }),
             sources = cmp.config.sources({
                 { name = 'nvim_lsp' },
-                { name = 'luasnip' },
-            }, {
                 { name = 'buffer' },
-            })
+                { name = 'path' },
+                { name = 'nvim_lsp_signature_help' },
+            }),
+            experimental = {
+                ghost_text = true,
+            },
         })
 
         vim.diagnostic.config({
@@ -122,7 +140,5 @@ return {
                 prefix = "",
             },
         })
-
-        vim.api.nvim_set_keymap('v', '<leader>f', '<cmd>lua vim.lsp.buf.format({async = true})<CR>', {noremap = true, silent = true})
     end
 }
