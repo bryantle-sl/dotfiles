@@ -38,7 +38,6 @@ return {
                     }
                 end,
                 ["pyright"] = function()
-                    local home = vim.fn.expand("$HOME")
                     require("lspconfig").pyright.setup {
                         capabilities = capabilities,
                         settings = {
@@ -49,7 +48,8 @@ return {
                                     diagnosticMode = "workspace",
                                     typeCheckingMode = "basic",
                                     autoImportCompletions = true,
-                                    extraPaths = { ".", "analytics", home .. "/anaconda3/envs/analytics/lib/python3.11/site-packages",
+                                    diagnosticSeverityOverrides = {
+                                        reportAttributeAccessIssue = "none",
                                     },
                                 },
                             },
@@ -103,6 +103,7 @@ return {
                     filetypes = { "markdown", "yaml", "json" }
                 }),
                 null_ls.builtins.formatting.goimports,
+                null_ls.builtins.diagnostics.markdownlint,
             },
         })
 

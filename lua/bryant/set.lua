@@ -18,3 +18,7 @@ vim.opt.incsearch = true
 
 -- highlight current line
 vim.opt.cursorline = true
+
+-- whitespace visualization
+vim.opt.list = true
+vim.opt.listchars = { tab = '→ ', trail = '·' }
