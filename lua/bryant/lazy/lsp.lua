@@ -43,11 +43,13 @@ return {
                         settings = {
                             python = {
                                 analysis = {
+                                    reportMissingImports = "none",
                                     autoSearchPaths = true,
                                     useLibraryCodeForTypes = true,
                                     diagnosticMode = "workspace",
                                     typeCheckingMode = "basic",
                                     autoImportCompletions = true,
+                                    extraPaths = { vim.fn.expand("$CONDA_PREFIX/lib/python3.11/site-packages") },
                                     diagnosticSeverityOverrides = {
                                         reportAttributeAccessIssue = "none",
                                     },
@@ -55,7 +57,10 @@ return {
                             },
                         },
                         root_dir = function(fname)
-                            return require("lspconfig.util").find_git_ancestor(fname) or vim.loop.os_homedir()
+                            local util = require("lspconfig.util")
+                            local git_root = util.find_git_ancestor(fname)
+                            local current_dir = util.path.dirname(fname)
+                            return git_root or current_dir
                         end,
                     }
                 end,
@@ -96,12 +101,44 @@ return {
         })
 
         local null_ls = require("null-ls")
+        local null_ls = require("null-ls")
+        local h = require("null-ls.helpers")
+        local methods = require("null-ls.methods")
+        local FORMATTING = methods.internal.FORMATTING
+
+        -- Create custom formatter using ruff format only (no linting)
+        local ruff_format = h.make_builtin({
+            name = "ruff_format",
+            meta = {
+                url = "https://github.com/astral-sh/ruff",
+                description = "An extremely fast Python formatter, written in Rust.",
+            },
+            method = FORMATTING, -- Only use formatting, not diagnostics
+            filetypes = { "python" },
+            generator_opts = {
+                command = "ruff",
+                args = { "format", "$FILENAME" },
+                to_temp_file = true,
+                from_temp_file = true,
+            },
+            factory = h.formatter_factory,
+        })
+
+
+        local prettier = null_ls.builtins.formatting.prettier.with({
+            filetypes = { "markdown", "yaml", "json" },
+            prefer_local = "node_modules/.bin",
+            extra_args = {
+                "--prose-wrap", "always",
+                "--print-width", "100"
+            },
+        })
+
+
         null_ls.setup({
             sources = {
-                null_ls.builtins.formatting.black,
-                null_ls.builtins.formatting.prettier.with({
-                    filetypes = { "markdown", "yaml", "json" }
-                }),
+                ruff_format,
+                prettier,
                 null_ls.builtins.formatting.goimports,
                 null_ls.builtins.diagnostics.markdownlint,
             },
