@@ -154,8 +154,8 @@ return {
             mapping = cmp.mapping.preset.insert({
                 ['<S-Tab>'] = cmp.mapping.select_prev_item(),
                 ['<Tab>'] = cmp.mapping.select_next_item(),
-                ['<CR>'] = cmp.mapping.confirm({ select = true }),
                 ["<C-Space>"] = cmp.mapping.complete(),
+                ['<C-y>'] = cmp.mapping.confirm({ select = true }),
             }),
             sources = cmp.config.sources({
                 { name = 'nvim_lsp' },
